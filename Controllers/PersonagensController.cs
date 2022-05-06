@@ -1,27 +1,30 @@
 
 using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RpgApi.Data;
 using RpgApi.Models;
-using Microsoft.AspNetCore.Authorization;
 
 namespace RpgApi.Controllers
-{
-    [Authorize]
+{    
     [ApiController]
     [Route("[Controller]")]
     public class PersonagensController : ControllerBase
     {
         //Programação de toda a classe ficará aqui abaixo
         private readonly DataContext _context;
+        private readonly IHttpContextAccessor _httpContextoAccessor; //using Microsoft.AspNetCore.Http;
 
-        public PersonagensController(DataContext context)
+       public PersonagensController(DataContext context, IHttpContextAccessor httpContextAccessor)
         {
-            _context = context;
+            _context = context; //inicialização do atributo
+            _httpContextoAccessor = httpContextAccessor;
         }
-
 
         [HttpGet("{id}")] //Buscar pelo id
         public async Task<IActionResult> GetSingle(int id)
@@ -69,6 +72,8 @@ namespace RpgApi.Controllers
                     throw new System.Exception("Pontos de vida não pode ser maior que 100");
                 }                
 
+                novoPersonagem.Usuario = _context.Usuarios.FirstOrDefault(uBusca => uBusca.Id == ObterUsuarioId());
+
                 await _context.Personagens.AddAsync(novoPersonagem);
                 await _context.SaveChangesAsync();
 
@@ -79,6 +84,7 @@ namespace RpgApi.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
 
         [HttpPut]
         public async Task<IActionResult> Update(Personagem novoPersonagem)
@@ -120,7 +126,29 @@ namespace RpgApi.Controllers
             }
         }
 
+         [HttpGet("GetByUser")]
+        public async Task<IActionResult> GetByUserAsync()
+        {
+            try
+            {
+                int id = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value);
+                
+                List<Personagem> lista = await _context.Personagens
+                            .Where(u => u.Usuario.Id == id)
+                            .ToListAsync();
 
+                return Ok(lista);
+            }
+            catch (System.Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        private int ObterUsuarioId()
+        {
+            return int.Parse(_httpContextoAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));            
+        }
 
 
 
