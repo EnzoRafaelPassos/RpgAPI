@@ -10,8 +10,10 @@ using Microsoft.EntityFrameworkCore;
 using RpgApi.Data;
 using RpgApi.Models;
 
+
 namespace RpgApi.Controllers
 {    
+    [Authorize(Roles = "Jogador, Admin")]
     [ApiController]
     [Route("[Controller]")]
     public class PersonagensController : ControllerBase
@@ -149,6 +151,38 @@ namespace RpgApi.Controllers
         {
             return int.Parse(_httpContextoAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));            
         }
+
+        private string ObterPerfilUsuario()
+        {
+            return _httpContextoAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Role);
+        }
+
+         [HttpGet("GetByPerfil")]
+        public async Task<IActionResult> GetByPerfilAsync()
+        {
+            try
+            {
+                List<Personagem> lista = new List<Personagem>();
+
+                if(ObterPerfilUsuario() == "Admin")
+                {
+                    lista = await _context.Personagens.ToListAsync();
+                }
+                else
+                {
+                    lista = await _context.Personagens
+                            .Where(p => p.Usuario.Id == ObterUsuarioId()).ToListAsync();
+                }
+                return Ok(lista);
+            }
+            catch (System.Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+
+        }
+
+
 
 
 

@@ -14,14 +14,15 @@ namespace RpgApi.Models
         public byte[] PasswordSalt { get; set; }
         public byte[] Foto { get; set; }
         public string Latitude { get; set; }
-        public string Longitudw { get; set; }
+        public string Longitude { get; set; }
         public DateTime? DataAcesso { get; set; } //using System;
+        public string Email {get; set;}
 
         [NotMapped] // using System.ComponentModel.DataAnnotations.Schema
         public string PasswordString { get; set; }
         public List<Personagem> Personagens { get; set; }//using System.Collections.Generic;
 
-        [Required]
+        // [Required]
         public string Perfil {get; set;}
     }
 }
