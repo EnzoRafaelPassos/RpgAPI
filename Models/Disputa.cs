@@ -14,7 +14,7 @@ namespace RpgApi.Models
 
             [NotMapped]
 
-            public int HabiulidadeId {get; set;}
+            public int HabilidadeId {get; set;}
 
              [NotMapped]
 
